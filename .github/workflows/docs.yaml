@@ -18,7 +18,7 @@ permissions:
 jobs:
   build:
     name: build and deploy mathlib4 docs
-    runs-on: doc-gen
+    runs-on: ubuntu-latest
     steps:
       - name: clean up
         run: |
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -o pipefail
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: set toolchain
         run: |
