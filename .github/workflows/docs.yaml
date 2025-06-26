@@ -22,9 +22,8 @@ jobs:
     steps:
       - name: clean up
         run: |
-          rm -rf lean4_api_docs
-          rm -rf workaround
-          rm -rf $HOME/.elan
+          rm -rf lean-toolchain
+          rm -rf lake-manifest.json
 
       - name: Checkout repo
         uses: actions/checkout@v4
