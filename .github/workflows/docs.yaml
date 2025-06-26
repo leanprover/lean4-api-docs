@@ -1,4 +1,4 @@
-name: build and deploy mathlib4 docs
+name: build and deploy lean4 docs
 
 on:
   push:
@@ -22,24 +22,12 @@ jobs:
     steps:
       - name: clean up
         run: |
-          rm -rf mathlib4_docs
-          rm -rf mathlib4
+          rm -rf lean4_api_docs
           rm -rf workaround
           rm -rf $HOME/.elan
-          rm -rf $HOME/.cache/mathlib
 
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          repository: leanprover-community/mathlib4_docs
-          path: mathlib4_docs
-
-
-      - name: Checkout mathlib
-        uses: actions/checkout@v4
-        with:
-          repository: leanprover-community/mathlib4
-          path: mathlib4
 
       - name: install elan
         run: |
@@ -47,80 +35,24 @@ jobs:
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
-      - name: set default toolchain
-        working-directory: mathlib4
+      - name: set toolchain
         run: |
-          elan default $(cat lean-toolchain)
-
-      - name: get cache
-        working-directory: mathlib4
-        run: lake exe cache get
-
-      - name: build mathlib
-        working-directory: mathlib4
-        run: env LEAN_ABORT_ON_PANIC=1 lake build
-
-      - name: create dummy docs project
-        run: |
-          lake new workaround lib
-          cd workaround
-          cp -f ../mathlib4/lean-toolchain .
-          cp -f ../mathlib4_docs/lakefile.toml .
-
-          # doc-gen4 expects to work on github repos with at least one commit
-          git config user.email "mathlib4_docs@leanprover-community.github.io"
-          git config user.name "mathlib4_docs CI"
-          git add .
-          git commit -m "workaround"
-          git remote add origin "https://github.com/leanprover-community/workaround"
-
-          mkdir -p .lake/packages
-          cp -r ../mathlib4/.lake/packages/* .lake/packages
-          lake update
-
-          # Copy references.bib over while doc-gen lacks support for subproject references.bib
-          mkdir docs/
-          cp ../mathlib4/docs/references.bib docs/references.bib
+          curl -L https://raw.githubusercontent.com/leanprover/doc-gen4/refs/heads/main/lean-toolchain | tee lean-toolchain
 
       - name: build doc-gen4
-        working-directory: workaround
         run: |
           lake build doc-gen4
 
-      - name: build import graph
-        working-directory: mathlib4
-        run: |
-          lake exe graph mathlib.html
-
       - name: generate docs
-        working-directory: workaround
         run: |
-          lake build Batteries:docs Qq:docs Aesop:docs ProofWidgets:docs Mathlib:docs Archive:docs Counterexamples:docs docs:docs
-          lake build Mathlib:docsHeader
-
-      - name: copy extra files
-        run: |
-          cp mathlib4/docs/{100.yaml,1000.yaml,overview.yaml,undergrad.yaml} workaround/.lake/build/doc
-
-      - name: copy import graph
-        run: |
-          cp mathlib4/mathlib.html workaround/.lake/build/doc
+          lake build lean4-api-docs:docs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'workaround/.lake/build/doc'
+          path: '.lake/build/doc'
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: clean up
-        if: always()
-        run: |
-          rm -rf mathlib4_docs
-          rm -rf mathlib4
-          rm -rf workaround
-          rm -rf $HOME/.elan
-          rm -rf $HOME/.cache/mathlib

@@ -1,15 +1,11 @@
-name = "workaround"
+name = "lean4-api-docs"
 version = "0.1.0"
-defaultTargets = ["workaround"]
+defaultTargets = ["lean4-api-docs"]
 
 [[lean_lib]]
-name = "Workaround"
+name = "lean4-api-docs"
 
 [[require]]
 scope = "leanprover"
 name = "doc-gen4"
 rev = "main"
-
-[[require]]
-name = "mathlib"
-path = "../mathlib4"
